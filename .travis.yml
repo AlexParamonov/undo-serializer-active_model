@@ -1,0 +1,19 @@
+language: ruby
+rvm:
+  - 2.1
+  - 2.0
+  - 1.9.3
+  - ruby-head
+  - rbx
+  - jruby-19mode
+  - jruby-head
+
+matrix:
+  allow_failures:
+    - rvm: ruby-head
+    - rvm: rbx
+    - rvm: jruby-19mode
+    - rvm: jruby-head
+
+script:
+  - "bundle exec rake ci:all"
