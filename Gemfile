@@ -1,6 +1,4 @@
 source 'https://rubygems.org'
-
-# Specify your gem's dependencies in undo.gemspec
 gemspec
 
 group :test do
@@ -9,6 +7,8 @@ group :test do
   gem "sqlite3", :platform => [:ruby, :mswin, :mingw]
   gem 'factory_girl'
   gem 'faker'
+  gem "pry"
+  gem "pry-plus" if "ruby" == RUBY_ENGINE
 end
 
 platforms :rbx do

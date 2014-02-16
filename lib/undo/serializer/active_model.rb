@@ -1,6 +1,8 @@
 module Undo
   module Serializer
     class ActiveModel
+      VERSION = "0.0.1"
+
       def initialize(model_serializer = nil)
         @model_serializer = model_serializer
       end

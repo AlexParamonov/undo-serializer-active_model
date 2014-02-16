@@ -33,7 +33,9 @@ Or install it yourself as:
 
 Requirements
 ------------
-1. Ruby 1.9 or above
+1. Ruby >= 1.9
+1. `active_model_serializers` "~> 0.8"
+1. `activesupport` (`active_model_serializers` depends on it too)
 
 Usage
 ------------
