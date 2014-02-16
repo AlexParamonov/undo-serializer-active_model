@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Undo::Serializer::ActiveModel::VERSION
   spec.authors       = ["Alexander Paramonov"]
   spec.email         = ["alexander.n.paramonov@gmail.com"]
-  spec.summary       = %q{Pass though serializer for Undo gem}
-  spec.description   = %q{Pass though serializer for Undo gem. It do nothing and returns whatever passed to it.}
+  spec.summary       = %q{ActiveModel serializer for Undo gem.}
+  spec.description   = %q{ActiveModel serializer for Undo gem.}
   spec.homepage      = "http://github.com/AlexParamonov/undo-serializer-active_model"
   spec.license       = "MIT"
 

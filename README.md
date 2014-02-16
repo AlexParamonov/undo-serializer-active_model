@@ -5,7 +5,7 @@ Undo
 [![Coverage Status](https://coveralls.io/repos/AlexParamonov/undo-serializer-active_model/badge.png?branch=master)](https://coveralls.io/r/AlexParamonov/undo-serializer-active_model?branch=master)
 [![Gem Version](https://badge.fury.io/rb/undo-serializer-active_model.png)](http://badge.fury.io/rb/undo-serializer-active_model)
 
-ActiveModel serializer
+ActiveModel serializer for Undo gem.
 
 Contents
 ---------
