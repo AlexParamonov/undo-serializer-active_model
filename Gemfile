@@ -9,6 +9,7 @@ group :test do
   gem 'faker'
   gem "pry"
   gem "pry-plus" if "ruby" == RUBY_ENGINE
+  gem "coveralls" if !!ENV['CI']
 end
 
 platforms :rbx do
