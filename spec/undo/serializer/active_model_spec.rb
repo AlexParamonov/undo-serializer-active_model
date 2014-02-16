@@ -37,4 +37,18 @@ describe Undo::Serializer::ActiveModel do
     expect(restored_user).to eq user.reload
   end
 
+  describe "find model serializer" do
+    it "detects serializer for a model" do
+      serializer = subject.new
+      expect(UserSerializer).to receive(:new)
+      serializer.serialize(user)
+    end
+
+    it "uses provided serializer" do
+      model_serializer = double :model_serializer
+      serializer = subject.new model_serializer
+      expect(model_serializer).to receive(:new)
+      serializer.serialize(user)
+    end
+  end
 end

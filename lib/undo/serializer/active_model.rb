@@ -1,12 +1,12 @@
 module Undo
   module Serializer
     class ActiveModel
-      def initialize(model_serializer)
+      def initialize(model_serializer = nil)
         @model_serializer = model_serializer
       end
 
       def serialize(object)
-        model_serializer.new(object).as_json
+        model_serializer(object).as_json
       end
 
       def deserialize(hash)
@@ -33,7 +33,10 @@ module Undo
       end
 
       private
-      attr_reader :model_serializer
+      def model_serializer(object)
+        @model_serializer ||= object.active_model_serializer
+        @model_serializer.new object
+      end
 
       def deserialize_association(association, values)
         Array.wrap(values).each do |value|
