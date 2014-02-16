@@ -35,6 +35,38 @@ Requirements
 ------------
 1. Ruby 1.9 or above
 
+Usage
+------------
+
+It is required to set `somethig___association_class_name` as `key` in `active_model_serializer`:
+``` ruby
+class UserSerializer < ActiveModel::Serializer
+  attributes *User.attribute_names.map(&:to_sym)
+  has_many :roles, key: :has_many___roles
+end
+```
+
+Gem is designed to be used with Undo gem.  
+Add it in global config:
+
+``` ruby
+Undo.configure do |config|
+  config.serializer = Undo::Serializer::ActiveModel.new
+end
+```
+
+or use in place:
+``` ruby
+Undo.wrap user, serializer: Undo::Serializer::ActiveModel.new
+Undo.restore uuid, serializer: Undo::Serializer::ActiveModel.new
+```
+
+In place using the specific serializer from `gem active_model_serializers`:
+``` ruby
+Undo.wrap user, serializer: Undo::Serializer::ActiveModel.new(UserSerializer.new(user))
+```
+
+
 Contacts
 -------------
 Have questions or recommendations? Contact me via `alexander.n.paramonov@gmail.com`
