@@ -7,9 +7,12 @@ group :test do
   gem "sqlite3", :platform => [:ruby, :mswin, :mingw]
   gem 'factory_girl'
   gem 'faker'
-  gem "pry"
-  gem "pry-plus" if "ruby" == RUBY_ENGINE
-  gem "coveralls" if !!ENV['CI']
+  if !!ENV['CI']
+    gem "coveralls"
+  else
+    gem "pry"
+    gem "pry-plus" if "ruby" == RUBY_ENGINE
+  end
 end
 
 platforms :rbx do
