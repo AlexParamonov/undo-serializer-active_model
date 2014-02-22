@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "undo-serializer-active_model"
-  spec.version       = "0.0.2"
+  spec.version       = IO.read("VERSION")
   spec.authors       = ["Alexander Paramonov"]
   spec.email         = ["alexander.n.paramonov@gmail.com"]
   spec.summary       = %q{ActiveModel serializer for Undo gem.}
