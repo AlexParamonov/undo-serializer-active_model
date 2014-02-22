@@ -1,3 +1,5 @@
+require "active_support"
+
 module Undo
   module Serializer
     class ActiveModel

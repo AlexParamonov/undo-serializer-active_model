@@ -1,11 +1,10 @@
-if !!ENV['CI']
-  require 'coveralls'
-  Coveralls.wear!
-else
-  require 'pry'
-end
+require 'coveralls'
+require "undo/serializer/active_model"
 
-ENV['RAILS_ENV'] ||= 'test'
-require 'rspec'
+RSpec.configure do |config|
+  config.expect_with :rspec do |c|
+    c.syntax = :expect
+  end
+end
 
 $: << File.expand_path('../lib', File.dirname(__FILE__))

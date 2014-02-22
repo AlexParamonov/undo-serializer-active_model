@@ -1,5 +1,4 @@
 require "spec_helper_lite"
-require "undo/serializer/active_model"
 
 describe Undo::Serializer::ActiveModel do
   subject { described_class }

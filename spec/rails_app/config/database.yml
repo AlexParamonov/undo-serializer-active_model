@@ -1,4 +1,7 @@
-test:
+test: &test
   adapter: <%= "jruby" == RUBY_ENGINE ? "jdbcsqlite3" : "sqlite3" %>
   database: ":memory:"
   timeout: 5000
+
+development: 
+  <<: *test
