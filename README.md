@@ -103,7 +103,7 @@ tested with Ruby
 * 2.0
 * 1.9.3
 * ruby-head
-* rbx
+* rbx-2
 * jruby-19mode
 * jruby-head
 

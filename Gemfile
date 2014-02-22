@@ -15,9 +15,3 @@ group :test do
     gem "pry-plus" if "ruby" == RUBY_ENGINE
   end
 end
-
-platforms :rbx do
-  gem 'racc'
-  gem 'rubysl', '~> 2.0'
-  gem 'psych'
-end
