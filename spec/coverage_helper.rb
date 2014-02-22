@@ -1,4 +1,4 @@
-if "test" == ENV["RAILS_ENV"]
+if !!ENV["CI"] || "test" == ENV["RAILS_ENV"]
   require 'simplecov'
   require 'coveralls'
   SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
