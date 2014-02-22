@@ -97,7 +97,7 @@ Found a bug or have enhancement request? You are welcome at [Github bugtracker](
 
 Compatibility
 -------------
-tested with Ruby
+tested with Ruby:
 
 * 2.1
 * 2.0
@@ -106,6 +106,14 @@ tested with Ruby
 * rbx-2
 * jruby-19mode
 * jruby-head
+
+and ActiveRecord:
+
+* 3.0
+* 3.1
+* 3.2
+* 4.0
+* 4.1
 
 See [build history](http://travis-ci.org/#!/AlexParamonov/undo-serializer-active_model/builds)
 
