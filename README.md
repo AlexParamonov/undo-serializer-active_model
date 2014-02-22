@@ -7,6 +7,8 @@ Undo
 
 ActiveModel serializer for Undo gem.
 
+Designed to be used with `gem "active_model_serializers"`, but does not depends on it.
+
 Contents
 ---------
 1. Installation
@@ -34,19 +36,10 @@ Or install it yourself as:
 Requirements
 ------------
 1. Ruby >= 1.9
-1. `active_model_serializers` "~> 0.8"
-1. `activesupport` (`active_model_serializers` depends on it too)
+1. `activesupport` (`active_model_serializers` depends on it)
 
 Usage
 ------------
-
-It is required to set `somethig___association_class_name` as `key` in `active_model_serializer`:
-``` ruby
-class UserSerializer < ActiveModel::Serializer
-  attributes *User.attribute_names.map(&:to_sym)
-  has_many :roles, key: :has_many___roles
-end
-```
 
 Gem is designed to be used with Undo gem.  
 Add it in global config:
@@ -57,21 +50,48 @@ Undo.configure do |config|
 end
 ```
 
-or use in place:
+Custom serializer could be provided to the adapter:
+``` ruby
+Undo.configure do |config|
+  config.serializer = 
+    Undo::Serializer::ActiveModel.new serializer: ->(object) { "#{object.class.name}UndoSerializer".constantize.new(object) }
+end
+```
+
+Or it may be initialized by serializer instance:
+``` ruby
+Undo.configure do |config|
+  config.serializer = 
+    Undo::Serializer::ActiveModel.new CustomSerializer.new
+end
+```
+
+As usual any Undo configuration may be set in place on wrap and restore:
 ``` ruby
 Undo.wrap user, serializer: Undo::Serializer::ActiveModel.new
 Undo.restore uuid, serializer: Undo::Serializer::ActiveModel.new
 ```
 
-In place using the specific serializer from `gem active_model_serializers`:
+In place using the specific serializer from `gem "active_model_serializers"`:
 ``` ruby
 Undo.wrap user, serializer: Undo::Serializer::ActiveModel.new(UserSerializer.new(user))
+```
+
+### Associations
+
+It is required to set `somethig___association_class_name` as `key` in `active_model_serializer`:
+``` ruby
+class UserSerializer < ActiveModel::Serializer
+  attributes *User.attribute_names.map(&:to_sym)
+  has_many :roles, key: :has_many___roles
+end
 ```
 
 
 Contacts
 -------------
 Have questions or recommendations? Contact me via `alexander.n.paramonov@gmail.com`
+
 Found a bug or have enhancement request? You are welcome at [Github bugtracker](https://github.com/AlexParamonov/undo-serializer-active_model/issues)
 
 
@@ -100,5 +120,5 @@ See [build history](http://travis-ci.org/#!/AlexParamonov/undo-serializer-active
 
 Copyright
 ---------
-Copyright © 2014 Alexander Paramonov.
+Copyright © 2014 Alexander Paramonov.  
 Released under the MIT License. See the LICENSE file for further details.
