@@ -11,4 +11,6 @@ if !!ENV["CI"] || "test" == ENV["RAILS_ENV"]
     add_filter '/vendor/'
     minimum_coverage(90)
   end
+else
+  require "pry"
 end

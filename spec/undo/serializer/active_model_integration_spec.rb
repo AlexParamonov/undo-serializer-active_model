@@ -1,4 +1,8 @@
-require "spec_helper_rails"
+require "spec_helper"
+require "support/active_record"
+require "user"
+require "role"
+require "user_serializer"
 
 describe Undo::Serializer::ActiveModel do
   subject { described_class }
@@ -7,7 +11,7 @@ describe Undo::Serializer::ActiveModel do
 
   it "restores object" do
     hash = serializer.serialize user
-    user.destroy
+    user.delete
     restored_user = serializer.deserialize hash
 
     expect(restored_user).to eq user
@@ -18,7 +22,9 @@ describe Undo::Serializer::ActiveModel do
   it "restores object and associations" do
     roles = create_list :role, 3, user: user
     hash = serializer.serialize user
-    user.destroy
+    user.delete
+    Role.delete_all # HACK for ActiveRecord 3.0
+
     restored_user = serializer.deserialize hash
 
     expect(restored_user).to eq user

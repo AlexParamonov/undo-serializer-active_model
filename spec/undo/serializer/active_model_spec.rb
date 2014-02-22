@@ -1,4 +1,4 @@
-require "spec_helper_lite"
+require "spec_helper"
 
 describe Undo::Serializer::ActiveModel do
   subject { described_class }

@@ -19,8 +19,9 @@ module Undo
           next unless data.is_a? Hash
           data.stringify_keys!
 
+          id = data.fetch "id"
           object_class = object_class.to_s.camelize.constantize
-          object = object_class.where(id: data.fetch("id")).first_or_initialize
+          object = object_class.where(id: id).first || object_class.new(id: id)
 
           data.each do |field, value|
             next if "id" == field && object.persisted?
