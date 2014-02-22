@@ -1,4 +1,4 @@
-require 'coveralls'
+require_relative "coverage_helper"
 require "undo/serializer/active_model"
 
 RSpec.configure do |config|
