@@ -3,8 +3,6 @@ require "active_support"
 module Undo
   module Serializer
     class ActiveModel
-      VERSION = "0.0.2"
-
       def initialize(*args)
         options = args.extract_options!
         @serializer = args.first

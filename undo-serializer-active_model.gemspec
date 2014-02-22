@@ -1,11 +1,10 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'undo/serializer/active_model'
 
 Gem::Specification.new do |spec|
   spec.name          = "undo-serializer-active_model"
-  spec.version       = Undo::Serializer::ActiveModel::VERSION
+  spec.version       = "0.0.2"
   spec.authors       = ["Alexander Paramonov"]
   spec.email         = ["alexander.n.paramonov@gmail.com"]
   spec.summary       = %q{ActiveModel serializer for Undo gem.}
