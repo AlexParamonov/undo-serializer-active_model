@@ -15,27 +15,25 @@ module Undo
       end
 
       def deserialize(hash)
-        hash.each do |object_class, data|
-          next unless data.is_a? Hash
-          data.stringify_keys!
+        object_name, data = hash.first
+        return unless data.is_a? Hash
+        data.stringify_keys!
 
-          id = data.fetch "id"
-          object_class = object_class.to_s.camelize.constantize
-          object = object_class.where(id: id).first || object_class.new(id: id)
+        ActiveRecord::Base.transaction do
+          initialize_object(object_name, data).tap do |object|
+            data.each do |field, value|
+              next if "id" == field && object.persisted?
 
-          data.each do |field, value|
-            next if "id" == field && object.persisted?
-            _, association = field.to_s.split("___")
-            if association
-              deserialize_association(association, value)
-            else
-              object.send "#{field}=", value # not public_send!
+              case field
+              when /___(.*)/ then deserialize_association object, $1,    value
+              else                deserialize_field       object, field, value
+              end
             end
-          end
 
-          object.save!
-          return object
+            object.save!
+          end
         end
+
       end
 
       private
@@ -45,10 +43,20 @@ module Undo
         @serializer ||= serializer_source.call object
       end
 
-      def deserialize_association(association, values)
+      def deserialize_association(object, association, values)
         Array.wrap(values).each do |value|
-          deserialize(association.singularize => value)
+          deserialize association.singularize => value
         end
+      end
+
+      def deserialize_field(object, field, value)
+        object.send "#{field}=", value # not public_send!
+      end
+
+      def initialize_object(object_name, data)
+        id = data.fetch "id"
+        object_class = object_name.to_s.camelize.constantize
+        object_class.where(id: id).first || object_class.new(id: id)
       end
     end
   end
