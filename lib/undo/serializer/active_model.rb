@@ -15,12 +15,12 @@ module Undo
       end
 
       def deserialize(hash)
-        object_name, data = hash.first
+        object_handler, data = hash.first
         return unless data.is_a? Hash
         data.stringify_keys!
 
         ActiveRecord::Base.transaction do
-          initialize_object(object_name, data).tap do |object|
+          initialize_object(object_handler, data).tap do |object|
             data.each do |field, value|
               next if "id" == field && object.persisted?
 
@@ -45,7 +45,7 @@ module Undo
 
       def deserialize_association(object, association, values)
         Array.wrap(values).each do |value|
-          deserialize association.singularize => value
+          deserialize object.public_send(association) => value
         end
       end
 
@@ -53,10 +53,13 @@ module Undo
         object.send "#{field}=", value # not public_send!
       end
 
-      def initialize_object(object_name, data)
+      def initialize_object(object_handler, data)
         id = data.fetch "id"
-        object_class = object_name.to_s.camelize.constantize
-        object_class.where(id: id).first || object_class.new(id: id)
+        relation = case object_handler
+                   when String, Symbol then object_handler.to_s.camelize.constantize
+                   else object_handler end
+
+        relation.where(id: id).first || relation.new(id: id)
       end
     end
   end

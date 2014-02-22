@@ -27,6 +27,7 @@ describe Undo::Serializer::ActiveModel do
 
     restored_user = serializer.deserialize hash
 
+    restored_user.reload # HACK for ActiveRecord 3.0
     expect(restored_user).to eq user
     expect(restored_user.roles).to eq roles
   end
