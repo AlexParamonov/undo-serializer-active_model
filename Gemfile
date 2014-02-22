@@ -7,6 +7,7 @@ group :test do
   gem "sqlite3", :platform => [:ruby, :mswin, :mingw]
   gem 'factory_girl'
   gem 'faker'
+  gem "active_model_serializers", "~> 0.8"
   if !!ENV['CI']
     gem "coveralls"
   else
