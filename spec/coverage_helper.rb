@@ -8,6 +8,7 @@ if !!ENV["CI"] || "test" == ENV["RAILS_ENV"]
 
   SimpleCov.start do
     add_filter '/spec/'
+    add_filter '/vendor/'
     minimum_coverage(90)
   end
 end
