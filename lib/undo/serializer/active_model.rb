@@ -6,12 +6,15 @@ module Undo
     class ActiveModel
       VERSION = "0.0.2"
 
-      def initialize(model_serializer = nil)
-        @model_serializer = model_serializer
+      def initialize(*args)
+        options = args.extract_options!
+        @serializer = args.first
+        @serializer_source = options.fetch :serializer,
+          ->(object) { object.active_model_serializer.new object }
       end
 
       def serialize(object)
-        model_serializer(object).as_json
+        serializer(object).as_json
       end
 
       def deserialize(hash)
@@ -38,9 +41,10 @@ module Undo
       end
 
       private
-      def model_serializer(object)
-        @model_serializer ||= object.active_model_serializer
-        @model_serializer.new object
+      attr_reader :serializer_source
+
+      def serializer(object)
+        @serializer ||= serializer_source.call object
       end
 
       def deserialize_association(association, values)
