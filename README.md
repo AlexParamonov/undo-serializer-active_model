@@ -32,6 +32,8 @@ And then execute:
 Or install it yourself as:
 
     $ gem install undo-serializer-active_model
+    
+Install gem "active_model_serializers" if plan to use serializers provided by this gem (recommended)  
 
 Requirements
 ------------
