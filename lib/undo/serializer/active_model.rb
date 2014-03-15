@@ -5,13 +5,13 @@ module Undo
     class ActiveModel
       def initialize(*args)
         options = args.extract_options!
-        @serializer = args.first
-        @serializer_source = options.fetch :serializer,
-          ->(object) { object }
+        @serialize_attributes_source = options.fetch :serialize_attributes,
+          ->(object) { object.attributes }
 
         @initialize_object_source = options.fetch :find_or_initialize do
-          ->(object_class, pk_query) do
-            object_class.respond_to?(:where) && object_class.where(pk_query).first || object_class.new(pk_query)
+          lambda do |object_class, pk_query|
+            object_class.respond_to?(:where) && object_class.where(pk_query).first \
+              || object_class.new(pk_query)
           end
         end
 
@@ -24,21 +24,23 @@ module Undo
       def serialize(object, options = {})
         return object.map do |record|
           serialize record, options
-        end if object.respond_to? :map
+        end if array? object
 
-        associations = Array(options.fetch(:include, []))
-        serialized_object = serializer(object).as_json.tap do |hash|
-          associations.each do |association|
-            hash[association] = serialize(object.public_send association)
-          end
+        attributes = serialize_attributes(object) || {}
+        associations = {}
+        Array(options[:include]).map do |association|
+          associations[association] = serialize(object.public_send association)
+        end
+        pk_attributes = symbolize_keys(attributes).select do |attribute|
+          primary_key_fields.include? attribute
         end
 
         {
-          attributes: serialized_object,
-          object: {
-            primary_key: primary_key_fields,
+          attributes: attributes,
+          associations: associations,
+          meta: {
+            pk_attributes: pk_attributes,
             class_name: object.class.name,
-            associations: associations,
           }
         }
       end
@@ -46,21 +48,22 @@ module Undo
       def deserialize(object)
         return object.map do |record|
           deserialize record
-        end if object.respond_to?(:map) && ! object.is_a?(Hash)
+        end if array? object
 
         hash = symbolize_keys object
-        object_meta = hash.fetch :object
-        associations = object_meta.fetch(:associations).map(&:to_sym)
+        object_meta = hash.fetch :meta
+        associations = hash.fetch :associations
         attributes = hash.fetch :attributes
 
         with_transaction do
-          initialize_object(object_meta, attributes).tap do |object|
+          initialize_object(object_meta).tap do |object|
             attributes.each do |field, value|
-              if associations.include?(field)
-                deserialize value
-              else
-                deserialize_field object, field, value
-              end
+              deserialize_field object, field, value
+            end
+
+            # QUESTION: Set associations? object.association_name = deserialize association ?
+            associations.each do |(association_name, association)|
+              deserialize association
             end
 
             persist object
@@ -69,34 +72,19 @@ module Undo
       end
 
       private
-      attr_reader :serializer_source, :initialize_object_source, :persist_object_source
-
-      def serializer(object)
-        @serializer || serializer_source.call(object)
-      end
+      attr_reader :serialize_attributes_source,
+                  :initialize_object_source,
+                  :persist_object_source
 
       def deserialize_field(object, field, value)
-        return if primary_key_fields.include? field
         object.send "#{field}=", value # not public_send!
       end
 
-      def initialize_object(meta, attributes)
-        pk_query = attributes.select { |attribute| primary_key_fields.include? attribute }
+      def initialize_object(meta)
         object_class = constantize meta.fetch(:class_name)
+        pk_attributes = meta.fetch :pk_attributes
 
-        find_or_initialize object_class, pk_query
-      end
-
-      def primary_key_fields
-        Array(@primary_key_fields)
-      end
-
-      def persist(*args)
-        persist_object_source.call *args
-      end
-
-      def find_or_initialize(*args)
-        initialize_object_source.call *args
+        find_or_initialize object_class, pk_attributes
       end
 
       def with_transaction(&block)
@@ -107,20 +95,25 @@ module Undo
         end
       end
 
-      # ActiveSupport metods
+      def primary_key_fields
+        Array(@primary_key_fields)
+      end
+
+      def serialize_attributes(*args); serialize_attributes_source.call(*args) end
+      def find_or_initialize(*args);   initialize_object_source.call(*args) end
+      def persist(*args);              persist_object_source.call(*args) end
+
+      def array?(object)
+        object.respond_to?(:map) && ! object.is_a?(Hash)
+      end
+      # ActiveSupport methods
       def symbolize_keys(hash)
-        hash.inject({}){|result, (key, value)|
-          new_key = case key
-                    when String then key.to_sym
-                    else key
-                    end
-          new_value = case value
-                      when Hash then symbolize_keys(value)
-                      else value
-                      end
+        hash.each_with_object({}) do |(key, value), result|
+          new_key = key.is_a?(String) ? key.to_sym : key
+          new_value = value.is_a?(Hash) ? symbolize_keys(value) : value
+
           result[new_key] = new_value
-          result
-        }
+        end
       end
 
       def constantize(class_name)

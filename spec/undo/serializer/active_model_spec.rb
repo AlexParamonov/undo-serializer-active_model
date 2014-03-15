@@ -3,17 +3,15 @@ require "spec_helper"
 describe Undo::Serializer::ActiveModel do
   subject { described_class }
   let(:serializer) { subject.new }
-  let(:object) { double :object }
-  let(:am_serializer_method) { :as_json }
+  let(:object) { double :object, attributes: { id: 1, foo: "bar", bar: "baz", hello: "world" } }
 
   describe "custom finder fields" do
     it "uses finder fields to find the object" do
       FooBarTestObject = Class.new
       serializer = subject.new primary_key: [:foo, :bar]
-      allow(object).to receive(:as_json).and_return(foo: "bar", bar: "baz")
       allow(object).to receive(:class) { FooBarTestObject }
 
-      expect(FooBarTestObject).to receive(:new).with(foo: "bar", bar: "baz") { object }
+      expect(FooBarTestObject).to receive(:new).with(foo: "bar", bar: "baz") { object.as_null_object }
 
       hash = serializer.serialize object
       serializer.deserialize hash
@@ -21,34 +19,33 @@ describe Undo::Serializer::ActiveModel do
   end
 
   describe "custom serializer" do
-    it "uses provided serializer" do
-      custom_serializer = double :custom_serializer
-      serializer = subject.new custom_serializer
+    it "uses provided attribute serialization" do
+      attribute_serializer = double :attribute_serializer
+      serializer = subject.new serialize_attributes: attribute_serializer
 
-      expect(custom_serializer).to receive am_serializer_method
+      expect(attribute_serializer).to receive(:call).with(object)
       serializer.serialize object
     end
 
-    it "uses custom serializer source" do
-      custom_serializer_source = double :custom_serializer_source
-      custom_serializer = double :custom_serializer
-      serializer = subject.new serializer: custom_serializer_source
+    it "uses provided find_or_initialize deserialization" do
+      deserializer = double :find_or_initialize_deserializer
+      serializer = subject.new find_or_initialize: deserializer
 
-      expect(custom_serializer_source).to receive(:call).with(object) { custom_serializer }
-      expect(custom_serializer).to receive am_serializer_method
-      serializer.serialize object
+      hash = serializer.serialize object
+      expect(deserializer).to receive(:call).with(object.class, id: 1) { object.as_null_object }
+      serializer.deserialize hash
     end
 
-    it "has lower priority than providing the serializer directly" do
-      custom_serializer_source = double :custom_serializer_source
-      custom_serializer = double :custom_serializer
+    it "uses provided way of persisting object" do
+      persister = double :persister
 
-      serializer = subject.new custom_serializer, serializer: custom_serializer_source
+      deserializer = double :find_or_initialize_deserializer
+      allow(deserializer).to receive(:call) { object.as_null_object }
+      serializer = subject.new persist: persister, find_or_initialize: deserializer
 
-      expect(custom_serializer_source).not_to receive(:call)
-      expect(custom_serializer).to receive am_serializer_method
-
-      serializer.serialize object
+      hash = serializer.serialize object
+      expect(persister).to receive(:call).with(object)
+      serializer.deserialize hash
     end
   end
 
