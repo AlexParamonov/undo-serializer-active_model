@@ -51,46 +51,30 @@ Undo.configure do |config|
 end
 ```
 
-Custom serializer could be provided to the adapter:
+Custom primary_key set, find_or_initialize and persist procs could be provided to the adapter:
 ``` ruby
 Undo.configure do |config|
-  config.serializer = 
-    Undo::Serializer::ActiveModel.new serializer: ->(object) { "#{object.class.name}UndoSerializer".constantize.new(object) }
+  config.serializer = Undo::Serializer::ActiveModel.new(
+      primary_key: [:id, :status],
+      find_or_initialize: ->(object_class, pk_attributes) { object_class.find_or_initialize_by pk_attributes },
+      persist: ->(object) { object.save! },
+    )
 end
 ```
 
-Or it may be initialized by serializer instance:
+As usual any Undo configuration may be set in place on stope, wrap and restore:
 ``` ruby
-Undo.configure do |config|
-  config.serializer = 
-    Undo::Serializer::ActiveModel.new CustomSerializer.new
-end
+Undo.store user, primary_key: :uuid
+Undo.restore uuid, primary_key: :uuid
 ```
-
-As usual any Undo configuration may be set in place on wrap and restore:
-``` ruby
-Undo.wrap user, serializer: Undo::Serializer::ActiveModel.new
-Undo.restore uuid, serializer: Undo::Serializer::ActiveModel.new
-```
-
-In place using the specific serializer from `gem "active_model_serializers"`:
-``` ruby
-Undo.wrap user, serializer: Undo::Serializer::ActiveModel.new(UserSerializer.new(user))
-```
-
-#### Custom find_or_initialize and persist methods, primary_key options
-TBD
 
 ### Associations
 
-It is required to set `somethig___association_class_name` as `key` in `active_model_serializer`:
+Add `include` option to serialize the association
 ``` ruby
-class UserSerializer < ActiveModel::Serializer
-  attributes *User.attribute_names.map(&:to_sym)
-  has_many :roles, key: :has_many___roles
-end
+uuid = Undo.store post, include: comments
+Undo.restore uuid
 ```
-
 
 Contacts
 -------------
