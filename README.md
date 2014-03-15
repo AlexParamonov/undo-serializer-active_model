@@ -4,6 +4,7 @@ Undo
 [![Gemnasium Build Status](https://gemnasium.com/AlexParamonov/undo-serializer-active_model.png)](http://gemnasium.com/AlexParamonov/undo-serializer-active_model)
 [![Coverage Status](https://coveralls.io/repos/AlexParamonov/undo-serializer-active_model/badge.png?branch=master)](https://coveralls.io/r/AlexParamonov/undo-serializer-active_model?branch=master)
 [![Gem Version](https://badge.fury.io/rb/undo-serializer-active_model.png)](http://badge.fury.io/rb/undo-serializer-active_model)
+[![Code Climate](https://codeclimate.com/github/AlexParamonov/undo-serializer-active_model.png)](https://codeclimate.com/github/AlexParamonov/undo-serializer-active_model)
 
 ActiveModel serializer for Undo gem.
 
@@ -32,8 +33,6 @@ And then execute:
 Or install it yourself as:
 
     $ gem install undo-serializer-active_model
-    
-Install gem "active_model_serializers" if plan to use serializers provided by this gem (recommended)  
 
 Requirements
 ------------
@@ -78,6 +77,9 @@ In place using the specific serializer from `gem "active_model_serializers"`:
 ``` ruby
 Undo.wrap user, serializer: Undo::Serializer::ActiveModel.new(UserSerializer.new(user))
 ```
+
+#### Custom find_or_initialize and persist methods, primary_key options
+TBD
 
 ### Associations
 
