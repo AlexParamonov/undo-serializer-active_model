@@ -32,6 +32,10 @@ Or install it yourself as:
 
     $ gem install undo-serializer-active_model
 
+Most likely you'll install undo gem as well:
+
+    $ gem install undo
+
 Requirements
 ------------
 1. Ruby >= 1.9
@@ -40,7 +44,7 @@ Usage
 ------------
 
 Gem is designed to be used with Undo gem.  
-Add it in global config:
+Customize Undo to use serializer in global configuration:
 
 ``` ruby
 Undo.configure do |config|
@@ -48,7 +52,7 @@ Undo.configure do |config|
 end
 ```
 
-Custom primary_key set, find_or_initialize and persist procs could be provided to the adapter:
+Custom primary_key set, find_or_initialize and persist `Proc`s could be provided to the adapter:
 ``` ruby
 Undo.configure do |config|
   config.serializer = Undo::Serializer::ActiveModel.new(
@@ -65,7 +69,7 @@ It should work with most Virtus objects as well.
 
 As usual any Undo configuration may be set in place on store, wrap and restore:
 ``` ruby
-Undo.store user, primary_key: :uuid
+Undo.store user, serializer: Undo::Serializer::ActiveRecord.new(primary_key: :uuid)
 Undo.restore uuid, primary_key: :uuid, persist: ->(object) { object.write_to_disk! }
 ```
 
@@ -76,6 +80,8 @@ Add `include` option to serialize the association
 uuid = Undo.store post, include: comments
 Undo.restore uuid
 ```
+
+Will restore post with related comments.
 
 Contacts
 -------------
