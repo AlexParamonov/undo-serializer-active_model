@@ -1,10 +1,7 @@
-require "active_support"
-
 module Undo
   module Serializer
     class ActiveModel
-      def initialize(*args)
-        options = args.extract_options!
+      def initialize(options = {})
         load_options options
       end
 
