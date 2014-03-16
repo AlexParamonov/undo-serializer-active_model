@@ -5,26 +5,15 @@ module Undo
     class ActiveModel
       def initialize(*args)
         options = args.extract_options!
-        @serialize_attributes_source = options.fetch :serialize_attributes,
-          ->(object) { object.attributes }
-
-        @initialize_object_source = options.fetch :find_or_initialize do
-          lambda do |object_class, pk_query|
-            object_class.respond_to?(:where) && object_class.where(pk_query).first \
-              || object_class.new(pk_query)
-          end
-        end
-
-        @persist_object_source = options.fetch :persist,
-          ->(object) { object.respond_to?(:save!) && object.save! }
-
-        @primary_key_fields = options.fetch :primary_key, :id
+        load_options options
       end
 
       def serialize(object, options = {})
         return object.map do |record|
           serialize record, options
         end if array? object
+
+        load_options options
 
         attributes = serialize_attributes(object) || {}
         associations = {}
@@ -45,10 +34,12 @@ module Undo
         }
       end
 
-      def deserialize(object)
+      def deserialize(object, options = {})
         return object.map do |record|
           deserialize record
         end if array? object
+
+        load_options options
 
         hash = symbolize_keys object
         object_meta = hash.fetch :meta
@@ -93,6 +84,19 @@ module Undo
         else
           block.call
         end
+      end
+
+      def load_options(options)
+        @serialize_attributes_source = options.fetch :serialize_attributes, @serialize_attributes_source ||
+          ->(object) { object.attributes }
+
+        @initialize_object_source = options.fetch :find_or_initialize, @initialize_object_source ||
+          ->(object_class, pk_query) { object_class.respond_to?(:where) && object_class.where(pk_query).first || object_class.new(pk_query) }
+
+        @persist_object_source = options.fetch :persist, @persist_object_source ||
+          ->(object) { object.respond_to?(:save!) && object.save! }
+
+        @primary_key_fields = options.fetch :primary_key, @primary_key_fields || :id
       end
 
       def primary_key_fields

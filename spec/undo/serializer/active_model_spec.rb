@@ -49,4 +49,25 @@ describe Undo::Serializer::ActiveModel do
     end
   end
 
+  describe "in place serializer options" do
+    specify "#serialize" do
+      attribute_serializer = double :attribute_serializer
+      serializer = subject.new
+
+      expect(attribute_serializer).to receive(:call).with(object)
+      serializer.serialize object,
+        serialize_attributes: attribute_serializer
+    end
+
+    specify "#deserialize" do
+      deserializer = double :find_or_initialize_deserializer
+      serializer = subject.new
+
+      hash = serializer.serialize object
+      expect(deserializer).to receive(:call).with(object.class, id: 1) { object.as_null_object }
+      serializer.deserialize hash,
+        find_or_initialize: deserializer
+    end
+  end
+
 end

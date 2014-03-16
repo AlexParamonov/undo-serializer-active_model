@@ -6,7 +6,7 @@ Undo
 [![Gem Version](https://badge.fury.io/rb/undo-serializer-active_model.png)](http://badge.fury.io/rb/undo-serializer-active_model)
 [![Code Climate](https://codeclimate.com/github/AlexParamonov/undo-serializer-active_model.png)](https://codeclimate.com/github/AlexParamonov/undo-serializer-active_model)
 
-ActiveModel serializer for Undo gem.
+ActiveModel serializer for Undo gem. Does not require anything from Rails so is friendly to use with POROs.
 
 Designed to be used with `gem "active_model_serializers"`, but does not depends on it.
 
@@ -37,7 +37,6 @@ Or install it yourself as:
 Requirements
 ------------
 1. Ruby >= 1.9
-1. `activesupport` (`active_model_serializers` depends on it)
 
 Usage
 ------------
@@ -57,15 +56,19 @@ Undo.configure do |config|
   config.serializer = Undo::Serializer::ActiveModel.new(
       primary_key: [:id, :status],
       find_or_initialize: ->(object_class, pk_attributes) { object_class.find_or_initialize_by pk_attributes },
+      serialize_attributes: ->(object) { object.serializable_hash },
       persist: ->(object) { object.save! },
     )
 end
 ```
 
-As usual any Undo configuration may be set in place on stope, wrap and restore:
+For ActiveRecord Undo uses reasonable defaults, so most of the time it is not needed to overwrite them.
+It should work with most Virtus objects as well.
+
+As usual any Undo configuration may be set in place on store, wrap and restore:
 ``` ruby
 Undo.store user, primary_key: :uuid
-Undo.restore uuid, primary_key: :uuid
+Undo.restore uuid, primary_key: :uuid, persist: ->(object) { object.write_to_disk! }
 ```
 
 ### Associations

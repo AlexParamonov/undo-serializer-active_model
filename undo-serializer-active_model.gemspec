@@ -7,8 +7,8 @@ Gem::Specification.new do |spec|
   spec.version       = IO.read("VERSION")
   spec.authors       = ["Alexander Paramonov"]
   spec.email         = ["alexander.n.paramonov@gmail.com"]
-  spec.summary       = %q{ActiveModel serializer for Undo gem.}
-  spec.description   = %q{ActiveModel serializer for Undo gem.}
+  spec.summary       = %q{ActiveModel serializer for Undo gem. Does not require anything from Rails so is friendly to use with POROs.}
+  spec.description   = %q{ActiveModel serializer for Undo gem. Does not require anything from Rails so is friendly to use with POROs.}
   spec.homepage      = "http://github.com/AlexParamonov/undo-serializer-active_model"
   spec.license       = "MIT"
 
