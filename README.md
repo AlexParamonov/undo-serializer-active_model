@@ -8,8 +8,6 @@ Undo
 
 ActiveModel serializer for Undo gem. Does not require anything from Rails so is friendly to use with POROs.
 
-Designed to be used with `gem "active_model_serializers"`, but does not depends on it.
-
 Contents
 ---------
 1. Installation
