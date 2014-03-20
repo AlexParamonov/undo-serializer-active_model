@@ -9,6 +9,7 @@ module Undo
         return object.map do |record|
           serialize record, options
         end if array? object
+        return serialize_primitive object if primitive? object
 
         load_options options
 
@@ -22,26 +23,31 @@ module Undo
         end
 
         {
-          attributes: attributes,
-          associations: associations,
-          meta: {
-            pk_attributes: pk_attributes,
-            class_name: object.class.name,
+          object: {
+            attributes: attributes,
+            associations: associations,
+            meta: {
+              pk_attributes: pk_attributes,
+              class_name: object.class.name,
+            }
           }
         }
       end
 
-      def deserialize(object, options = {})
-        return object.map do |record|
+      def deserialize(input, options = {})
+        return input.map do |record|
           deserialize record
-        end if array? object
+        end if array? input
+        hash = symbolize_keys input
+
+        return deserialize_primitive hash.fetch(:primitive) if hash.has_key? :primitive
+        object_data = hash.fetch :object
+
+        object_meta  = object_data.fetch :meta
+        associations = object_data.fetch :associations
+        attributes   = object_data.fetch :attributes
 
         load_options options
-
-        hash = symbolize_keys object
-        object_meta = hash.fetch :meta
-        associations = hash.fetch :associations
-        attributes = hash.fetch :attributes
 
         with_transaction do
           initialize_object(object_meta).tap do |object|
@@ -63,6 +69,46 @@ module Undo
       attr_reader :serialize_attributes_source,
                   :initialize_object_source,
                   :persist_object_source
+
+      # TODO: extract to primitive serializer
+      def serialize_primitive(primitive)
+        {
+          primitive: {
+            object: primitive,
+            class_name: primitive.class.name
+          }
+        }
+      end
+
+      def primitive?(object)
+        case object
+        when
+          Integer,
+          Float,
+          Symbol,
+          String,
+          true,
+          false,
+          nil
+          then true
+        when Array, Hash then object.empty?
+        else false
+        end
+      end
+
+      def deserialize_primitive(primitive)
+        primitive_class = primitive.fetch(:class_name).to_s
+        object = primitive.fetch(:object)
+
+        return case primitive_class
+          when "Fixnum"     then object.to_i
+          when "Symbol"     then object.to_sym
+          when "TrueClass"  then true
+          when "FalseClass" then false
+          when "NilClass"   then nil
+          else Kernel.send primitive_class, object
+          end
+      end
 
       def deserialize_field(object, field, value)
         object.send "#{field}=", value # not public_send!

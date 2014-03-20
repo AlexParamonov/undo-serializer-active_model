@@ -5,6 +5,31 @@ describe Undo::Serializer::ActiveModel do
   let(:serializer) { subject.new }
   let(:object) { double :object, attributes: { id: 1, foo: "bar", bar: "baz", hello: "world" } }
 
+  # TODO: extract to shared examples
+  describe "special cases" do
+    cases= [nil, [], [nil, nil], true, false, 1, 1.0, "hello", :world]
+
+    cases.each do |input|
+      input_name = input.inspect
+      specify "deserialization of serialized #{input_name} returns #{input_name}" do
+        expect(serializer.deserialize serializer.serialize(input)).to eq input
+      end
+    end
+
+    describe "json storage" do
+      require "json"
+      cases.each do |input|
+        input_name = input.inspect
+
+        specify "deserialization of serialized #{input_name} returns #{input_name}" do
+          storage = -> object { JSON.load(object.to_json) }
+          data = storage.call serializer.serialize(input)
+          expect(serializer.deserialize data).to eq input
+        end
+      end
+    end
+  end
+
   describe "custom finder fields" do
     it "uses finder fields to find the object" do
       FooBarTestObject = Class.new
