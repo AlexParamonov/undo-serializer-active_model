@@ -61,28 +61,8 @@ module Undo
         end if array? input
         hash = symbolize_keys input
 
-        return deserialize_primitive hash.fetch(:primitive) if hash.has_key? :primitive
-        object_data = hash.fetch :object
-
-        object_meta  = object_data.fetch :meta
-        associations = object_data.fetch :associations
-        attributes   = object_data.fetch :attributes
-
-        with_transaction do
-          initialize_object(object_meta).tap do |object|
-            return if object.nil?
-
-            attributes.each do |field, value|
-              deserialize_field object, field, value
-            end
-
-            associations.each do |(association_name, association)|
-              associate object, association_name, deserialize(association)
-            end
-
-            persist object, object_meta
-          end
-        end
+        hash.has_key?(:primitive) ? deserialize_primitive(hash.fetch :primitive)
+                                  : deserialize_object(hash.fetch :object)
       end
 
       private
@@ -126,6 +106,28 @@ module Undo
           when "NilClass"   then nil
           else Kernel.send primitive_class, object
           end
+      end
+
+      def deserialize_object(object_data)
+        object_meta  = object_data.fetch :meta
+        associations = object_data.fetch :associations
+        attributes   = object_data.fetch :attributes
+
+        with_transaction do
+          initialize_object(object_meta).tap do |object|
+            return if object.nil?
+
+            attributes.each do |field, value|
+              deserialize_field object, field, value
+            end
+
+            associations.each do |(association_name, association)|
+              associate object, association_name, deserialize(association)
+            end
+
+            persist object, object_meta
+          end
+        end
       end
 
       def deserialize_field(object, field, value)
