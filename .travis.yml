@@ -11,11 +11,13 @@ rvm:
   - jruby-head
 
 gemfile:
-  - gemfiles/3.0.gemfile
-  - gemfiles/3.1.gemfile
-  - gemfiles/3.2.gemfile
-  - gemfiles/4.0.gemfile
-  - gemfiles/4.1.gemfile
+  - gemfiles/activerecord_3.0.gemfile
+  - gemfiles/activerecord_3.1.gemfile
+  - gemfiles/activerecord_3.2.gemfile
+  - gemfiles/activerecord_4.0.gemfile
+  - gemfiles/activerecord_4.1.gemfile
+  - gemfiles/activerecord_head.gemfile
+  - gemfiles/undo_head.gemfile
 
 matrix:
   allow_failures:
