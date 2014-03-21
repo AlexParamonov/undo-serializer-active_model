@@ -1,7 +1,7 @@
 require "spec_helper"
 
 class FooBarTestObject < OpenStruct
-  def attributes; to_h end
+  def attributes; marshal_dump end
 end
 
 describe Undo::Serializer::ActiveModel do
