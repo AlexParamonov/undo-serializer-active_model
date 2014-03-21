@@ -1,9 +1,14 @@
 require "spec_helper"
 
+class FooBarTestObject < OpenStruct
+  def attributes; to_h end
+end
+
 describe Undo::Serializer::ActiveModel do
   subject { described_class }
   let(:serializer) { subject.new }
-  let(:object) { double :object, attributes: { id: 1, foo: "bar", bar: "baz", hello: "world" } }
+  let(:object_class) { FooBarTestObject }
+  let(:object) { FooBarTestObject.new }
 
   # TODO: extract to shared examples
   describe "special cases" do
@@ -30,69 +35,113 @@ describe Undo::Serializer::ActiveModel do
     end
   end
 
-  describe "custom finder fields" do
-    it "uses finder fields to find the object" do
-      FooBarTestObject = Class.new
-      serializer = subject.new primary_key: [:foo, :bar]
-      allow(object).to receive(:class) { FooBarTestObject }
+  describe "options" do
+    describe "primary key" do
+      it "uses object primary key" do
+        object.uuid = "identifier"
+        allow(object).to receive(:primary_key) { "uuid" }
 
-      expect(FooBarTestObject).to receive(:new).with(foo: "bar", bar: "baz") { object.as_null_object }
+        expect(object_class).to receive(:new).with(uuid: "identifier") { double.as_null_object }
+        serializer.deserialize serializer.serialize object
+      end
 
-      hash = serializer.serialize object
-      serializer.deserialize hash
+      it "uses primary_key_fetcher" do
+        object.uuid = "identifier"
+
+        serializer = subject.new primary_key_fetcher: -> object { "uuid" }
+
+        expect(object_class).to receive(:new).with(uuid: "identifier") { double.as_null_object }
+        serializer.deserialize serializer.serialize object
+      end
+    end
+
+    describe "attribute_serializer" do
+      let(:attribute_serializer) { double :attribute_serializer }
+      let(:serializer) { subject.new attribute_serializer: attribute_serializer }
+
+      it "uses provided attribute serialization" do
+        expect(attribute_serializer).to receive(:call).with(object) { [] }
+        serializer.serialize object
+      end
+
+      context "when nil" do
+        let(:attribute_serializer) { proc { nil } }
+
+        it "does not raise" do
+          expect { serializer.serialize object }.not_to raise_error
+        end
+      end
+    end
+
+    describe "object_initializer" do
+      let(:initializer) { double :initializer }
+      let(:serializer) { subject.new object_initializer: initializer }
+      before do
+        object.id = 1
+        object.foo = :bar
+      end
+
+      it "uses provided initializer" do
+        hash = serializer.serialize object
+        expect(initializer).to receive(:call).with(object.class, id: 1) { double.as_null_object }
+        serializer.deserialize hash
+      end
+
+      context "when nil" do
+        let(:initializer) { proc { nil } }
+
+        it "returns nil" do
+          hash = serializer.serialize object
+          expect(serializer.deserialize hash).to eq nil
+        end
+
+        it "does not assigns attributes" do
+          hash = serializer.serialize object
+          expect{ serializer.deserialize hash }.not_to raise_error
+          expect(serializer.deserialize hash).to eq nil
+        end
+      end
+    end
+
+    describe "assign associations" do
+      it "uses provided way of assigning associations" do
+        associated_object = object_class.new name: "association"
+        object.association_name = [associated_object]
+
+        associator = double :associator
+        serializer = subject.new associator: associator
+
+        hash = serializer.serialize object, include: :association_name
+        expect(associator).to receive(:call) do |object, name, associations|
+          expect(associations.map(&:name)).to eq [associated_object.name]
+        end
+        serializer.deserialize hash
+      end
+    end
+
+    describe "persist object" do
+      it "uses provided way of persisting object" do
+        allow(object).to receive(:persisted?) { true }
+        persister = double :persister
+        serializer = subject.new persister: persister,
+                                 object_initializer: proc { object }
+
+        hash = serializer.serialize object
+        expect(persister).to receive(:call).with(object)
+        serializer.deserialize hash
+      end
+
+      it "does not persist new record objects" do
+        persister = double :persister
+        serializer = subject.new persister: persister,
+                                 object_initializer: proc { object }
+
+        allow(object).to receive(:persisted?) { false }
+
+        hash = serializer.serialize object
+        expect(persister).not_to receive(:call)
+        serializer.deserialize hash
+      end
     end
   end
-
-  describe "custom serializer" do
-    it "uses provided attribute serialization" do
-      attribute_serializer = double :attribute_serializer
-      serializer = subject.new serialize_attributes: attribute_serializer
-
-      expect(attribute_serializer).to receive(:call).with(object)
-      serializer.serialize object
-    end
-
-    it "uses provided find_or_initialize deserialization" do
-      deserializer = double :find_or_initialize_deserializer
-      serializer = subject.new find_or_initialize: deserializer
-
-      hash = serializer.serialize object
-      expect(deserializer).to receive(:call).with(object.class, id: 1) { object.as_null_object }
-      serializer.deserialize hash
-    end
-
-    it "uses provided way of persisting object" do
-      persister = double :persister
-
-      deserializer = double :find_or_initialize_deserializer
-      allow(deserializer).to receive(:call) { object.as_null_object }
-      serializer = subject.new persist: persister, find_or_initialize: deserializer
-
-      hash = serializer.serialize object
-      expect(persister).to receive(:call).with(object)
-      serializer.deserialize hash
-    end
-  end
-
-  describe "in place serializer options" do
-    specify "#serialize" do
-      attribute_serializer = double :attribute_serializer
-      serializer = subject.new
-
-      expect(attribute_serializer).to receive(:call).with(object)
-      serializer.serialize object,
-        serialize_attributes: attribute_serializer
-    end
-
-    specify "#deserialize" do
-      deserializer = double :find_or_initialize_deserializer
-      serializer = subject.new
-
-      hash = serializer.serialize object
-      expect(deserializer).to receive(:call).with(object.class, id: 1) { object.as_null_object }
-      serializer.deserialize hash,
-        find_or_initialize: deserializer
-    end
-  end
-
 end

@@ -7,7 +7,7 @@ Undo.configure do |config|
   config.serializer = Undo::Serializer::ActiveModel.new
 end
 
-# TODO: extract to shared test
+# TODO: extract to undo_integration test suite gem
 describe Undo do
   let(:object) { create :user }
   subject { described_class }

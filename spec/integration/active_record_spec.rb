@@ -18,6 +18,29 @@ describe Undo::Serializer::ActiveModel do
     expect(restored_user).to be_persisted
   end
 
+  describe "not persisted object" do
+    let(:user) { build :user }
+
+    it "restores object" do
+      hash = serializer.serialize user
+      restored_user = serializer.deserialize hash
+
+      expect(restored_user.attributes).to eq user.attributes
+      expect(restored_user).not_to be_persisted
+    end
+
+    it "restores provided associations" do
+      roles = build_list :role, 3
+      user.roles = roles
+      hash = serializer.serialize user, include: :roles
+
+      restored_user = serializer.deserialize hash
+
+      expect(restored_user).not_to be_persisted
+      expect(restored_user.roles.map(&:attributes)).to match roles.map(&:attributes)
+    end
+  end
+
   describe "associations" do
     it "restores provided associations" do
       roles = create_list :role, 3, user: user

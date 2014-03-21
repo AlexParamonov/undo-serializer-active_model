@@ -1,9 +1,28 @@
+require "virtus"
+
 module Undo
   module Serializer
     class ActiveModel
-      def initialize(options = {})
-        load_options options
+      include Virtus.value_object
+      values do
+        attribute :attribute_serializer, Proc, default: proc { -> object { object.attributes } }
+        attribute :persister, Proc, default: proc { -> object { object.respond_to?(:save!) && object.save! } }
+        attribute :associator, Proc, default: proc {
+          -> object, association, value do
+            object.respond_to?("#{association}=") && object.send("#{association}=", value)
+          end
+        }
+        attribute :object_initializer, Proc, default: proc {
+          -> object_class, pk_attributes do
+               object_class.respond_to?(:where) && object_class.where(pk_attributes).first \
+            || object_class.new(pk_attributes)
+          end
+        }
+        attribute :primary_key_fetcher, Proc, default: proc {
+          -> object { object.respond_to?(:primary_key) && object.primary_key || :id }
+        }
       end
+
 
       def serialize(object, options = {})
         return object.map do |record|
@@ -11,16 +30,20 @@ module Undo
         end if array? object
         return serialize_primitive object if primitive? object
 
-        load_options options
+        association_names = Array(options[:include])
+        primary_key_fields = primary_key object
 
-        attributes = serialize_attributes(object) || {}
-        associations = {}
-        Array(options[:include]).map do |association|
-          associations[association] = serialize(object.public_send association)
-        end
-        pk_attributes = symbolize_keys(attributes).select do |attribute|
+        attributes = serialize_attributes object
+        pk_attributes = attributes.select do |attribute|
           primary_key_fields.include? attribute
         end
+
+        associations = {}
+        association_names.map do |association|
+          associations[association] = serialize(object.public_send association)
+        end
+
+        is_persisted = object.respond_to?(:persisted?) && object.persisted?
 
         {
           object: {
@@ -29,9 +52,11 @@ module Undo
             meta: {
               pk_attributes: pk_attributes,
               class_name: object.class.name,
+              persisted: is_persisted,
             }
           }
         }
+
       end
 
       def deserialize(input, options = {})
@@ -47,28 +72,25 @@ module Undo
         associations = object_data.fetch :associations
         attributes   = object_data.fetch :attributes
 
-        load_options options
-
         with_transaction do
           initialize_object(object_meta).tap do |object|
+            return if object.nil?
+
             attributes.each do |field, value|
               deserialize_field object, field, value
             end
 
-            # QUESTION: Set associations? object.association_name = deserialize association ?
             associations.each do |(association_name, association)|
-              deserialize association
+              associate object, association_name, deserialize(association)
             end
 
-            persist object
+            persist object, object_meta
           end
         end
       end
 
       private
-      attr_reader :serialize_attributes_source,
-                  :initialize_object_source,
-                  :persist_object_source
+      attr_reader :config
 
       # TODO: extract to primitive serializer
       def serialize_primitive(primitive)
@@ -114,11 +136,27 @@ module Undo
         object.send "#{field}=", value # not public_send!
       end
 
+      def primary_key(object)
+        Array(primary_key_fetcher.call(object)).map!(&:to_sym)
+      end
+
       def initialize_object(meta)
         object_class = constantize meta.fetch(:class_name)
         pk_attributes = meta.fetch :pk_attributes
 
-        find_or_initialize object_class, pk_attributes
+        object_initializer.call object_class, pk_attributes
+      end
+
+      def persist(object, object_meta)
+        persister.call object unless [false, nil, 0, "false"].include? object_meta[:persisted]
+      end
+
+      def associate(object, association, associations)
+        associator.call object, association, associations
+      end
+
+      def serialize_attributes(object)
+        symbolize_keys attribute_serializer.call(object) || {}
       end
 
       def with_transaction(&block)
@@ -128,27 +166,6 @@ module Undo
           block.call
         end
       end
-
-      def load_options(options)
-        @serialize_attributes_source = options.fetch :serialize_attributes, @serialize_attributes_source ||
-          ->(object) { object.attributes }
-
-        @initialize_object_source = options.fetch :find_or_initialize, @initialize_object_source ||
-          ->(object_class, pk_query) { object_class.respond_to?(:where) && object_class.where(pk_query).first || object_class.new(pk_query) }
-
-        @persist_object_source = options.fetch :persist, @persist_object_source ||
-          ->(object) { object.respond_to?(:save!) && object.save! }
-
-        @primary_key_fields = options.fetch :primary_key, @primary_key_fields || :id
-      end
-
-      def primary_key_fields
-        Array(@primary_key_fields)
-      end
-
-      def serialize_attributes(*args); serialize_attributes_source.call(*args) end
-      def find_or_initialize(*args);   initialize_object_source.call(*args) end
-      def persist(*args);              persist_object_source.call(*args) end
 
       def array?(object)
         object.respond_to?(:map) && ! object.is_a?(Hash)
