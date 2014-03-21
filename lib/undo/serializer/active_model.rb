@@ -30,14 +30,10 @@ module Undo
         end if array? object
         return serialize_primitive object if primitive? object
 
-        association_names = Array(options[:include])
-        primary_key_fields = primary_key object
-
         attributes = serialize_attributes object
-        pk_attributes = attributes.select do |attribute|
-          primary_key_fields.include? attribute
-        end
+        pk_attributes = primary_key_attributes object, attributes
 
+        association_names = Array(options[:include])
         associations = {}
         association_names.map do |association|
           associations[association] = serialize(object.public_send association)
@@ -136,8 +132,15 @@ module Undo
         object.send "#{field}=", value # not public_send!
       end
 
-      def primary_key(object)
-        Array(primary_key_fetcher.call(object)).map!(&:to_sym)
+      def primary_key_attributes(object, attributes)
+        fields = Array(primary_key_fetcher.call(object)).map!(&:to_sym)
+
+        pk_attributes = {}
+        fields.each do |field|
+          pk_attributes[field] = nil
+        end
+
+        pk_attributes.merge! attributes.select { |attribute| fields.include? attribute }
       end
 
       def initialize_object(meta)

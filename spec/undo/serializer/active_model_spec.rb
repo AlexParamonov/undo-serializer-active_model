@@ -53,6 +53,13 @@ describe Undo::Serializer::ActiveModel do
         expect(object_class).to receive(:new).with(uuid: "identifier") { double.as_null_object }
         serializer.deserialize serializer.serialize object
       end
+
+      it "use nil value when no primary_key attributes available" do
+        allow(object).to receive(:primary_key) { "uuid" }
+
+        expect(object_class).to receive(:new).with(uuid: nil) { double.as_null_object }
+        serializer.deserialize serializer.serialize object
+      end
     end
 
     describe "attribute_serializer" do

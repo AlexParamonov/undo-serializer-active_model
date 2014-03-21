@@ -46,11 +46,9 @@ describe Undo::Serializer::ActiveModel do
       roles = create_list :role, 3, user: user
       hash = serializer.serialize user, include: :roles
       user.delete
-      Role.delete_all # HACK for ActiveRecord 3.0
 
       restored_user = serializer.deserialize hash
 
-      restored_user.reload # HACK for ActiveRecord 3.0
       expect(restored_user).to eq user
       expect(restored_user.roles).to eq roles
     end
