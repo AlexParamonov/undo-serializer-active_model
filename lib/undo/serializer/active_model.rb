@@ -13,6 +13,10 @@ module Undo
         attribute :object_initializer,   Proc, default: proc { -> object_class, attributes { object_class.respond_to?(:where) && object_class.where(attributes).first || object_class.new(attributes) }}
       end
 
+      def name
+        "active_model"
+      end
+
       def serialize(object, options = {})
         return object.map do |record|
           serialize record, options
@@ -28,7 +32,7 @@ module Undo
         end if array? input
 
         return primitive_serializer.deserialize(input) if primitive_serializer.deserialize? input
-        deserialize_object(input.fetch :object)
+        deserialize_object(input)
       end
 
       private
@@ -51,14 +55,13 @@ module Undo
         is_persisted = object.respond_to?(:persisted?) && object.persisted?
 
         {
-          object: {
-            attributes: attributes,
-            associations: associations,
-            meta: {
-              pk_attributes: pk_attributes,
-              class_name: object.class.name,
-              persisted: is_persisted,
-            }
+          serializer: name,
+          attributes: attributes,
+          associations: associations,
+          meta: {
+            pk_attributes: pk_attributes,
+            class_name: object.class.name,
+            persisted: is_persisted,
           }
         }
       end
