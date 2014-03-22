@@ -10,31 +10,6 @@ describe Undo::Serializer::ActiveModel do
   let(:object_class) { FooBarTestObject }
   let(:object) { FooBarTestObject.new }
 
-  # TODO: extract to shared examples
-  describe "special cases" do
-    cases= [nil, [], [nil, nil], true, false, 1, 1.0, "hello", :world]
-
-    cases.each do |input|
-      input_name = input.inspect
-      specify "deserialization of serialized #{input_name} returns #{input_name}" do
-        expect(serializer.deserialize serializer.serialize(input)).to eq input
-      end
-    end
-
-    describe "json storage" do
-      require "json"
-      cases.each do |input|
-        input_name = input.inspect
-
-        specify "deserialization of serialized #{input_name} returns #{input_name}" do
-          storage = -> object { JSON.load(object.to_json) }
-          data = storage.call serializer.serialize(input)
-          expect(serializer.deserialize data).to eq input
-        end
-      end
-    end
-  end
-
   describe "options" do
     describe "primary key" do
       it "uses object primary key" do
@@ -67,7 +42,7 @@ describe Undo::Serializer::ActiveModel do
       let(:serializer) { subject.new attribute_serializer: attribute_serializer }
 
       it "uses provided attribute serialization" do
-        expect(attribute_serializer).to receive(:call).with(object) { [] }
+        expect(attribute_serializer).to receive(:call).with(object) { {} }
         serializer.serialize object
       end
 
