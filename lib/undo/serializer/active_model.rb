@@ -1,16 +1,11 @@
-require "virtus"
+require_relative "active_model/configuration"
 require_relative "primitive"
 
 module Undo
   module Serializer
     class ActiveModel
-      include Virtus.value_object
-      values do
-        attribute :attribute_serializer, Proc, default: proc { -> object { object.attributes } }
-        attribute :persister,            Proc, default: proc { -> object { object.respond_to?(:save!) && object.save! } }
-        attribute :primary_key_fetcher,  Proc, default: proc { -> object { object.respond_to?(:primary_key) && object.primary_key || :id }}
-        attribute :associator,           Proc, default: proc { -> object, association_name, value { setter = "#{association_name}="; object.respond_to?(setter) && object.send(setter, value) }}
-        attribute :object_initializer,   Proc, default: proc { -> object_class, attributes { object_class.respond_to?(:where) && object_class.where(attributes).first || object_class.new(attributes) }}
+      def initialize(options = {})
+        @config = self.class.config.with options
       end
 
       def name
@@ -93,7 +88,7 @@ module Undo
       end
 
       def primary_key_attributes(object, attributes)
-        fields = Array(primary_key_fetcher.call(object)).map(&:to_sym)
+        fields = Array(config.primary_key_fetcher.call(object)).map(&:to_sym)
 
         fields.each_with_object({}) do |field, pk_attributes|
           pk_attributes[field] = attributes[field] || attributes[field.to_s]
@@ -104,19 +99,19 @@ module Undo
         object_class = constantize meta.fetch(:class_name)
         pk_attributes = meta.fetch :pk_attributes
 
-        object_initializer.call object_class, pk_attributes
+        config.object_initializer.call object_class, pk_attributes
       end
 
       def persist(object, object_meta)
-        persister.call object unless [false, nil, 0, "false"].include? object_meta[:persisted]
+        config.persister.call object unless [false, nil, 0, "false"].include? object_meta[:persisted]
       end
 
       def associate(object, association, associations)
-        associator.call object, association, associations
+        config.associator.call object, association, associations
       end
 
       def serialize_attributes(object)
-        attribute_serializer.call(object) || {}
+        config.attribute_serializer.call(object) || {}
       end
 
       def with_transaction(&block)
