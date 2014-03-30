@@ -11,32 +11,6 @@ describe Undo::Serializer::ActiveModel do
   let(:object) { FooBarTestObject.new }
 
   describe "options" do
-    describe "primary key" do
-      it "uses object primary key" do
-        object.uuid = "identifier"
-        allow(object).to receive(:primary_key) { "uuid" }
-
-        expect(object_class).to receive(:new).with(uuid: "identifier") { double.as_null_object }
-        serializer.deserialize serializer.serialize object
-      end
-
-      it "uses primary_key_fetcher" do
-        object.uuid = "identifier"
-
-        serializer = subject.new primary_key_fetcher: -> object { "uuid" }
-
-        expect(object_class).to receive(:new).with(uuid: "identifier") { double.as_null_object }
-        serializer.deserialize serializer.serialize object
-      end
-
-      it "use nil value when no primary_key attributes available" do
-        allow(object).to receive(:primary_key) { "uuid" }
-
-        expect(object_class).to receive(:new).with(uuid: nil) { double.as_null_object }
-        serializer.deserialize serializer.serialize object
-      end
-    end
-
     describe "attribute_serializer" do
       let(:attribute_serializer) { double :attribute_serializer }
       let(:serializer) { subject.new attribute_serializer: attribute_serializer }
