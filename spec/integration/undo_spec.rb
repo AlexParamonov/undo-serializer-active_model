@@ -2,7 +2,7 @@ require "spec_helper"
 require "undo"
 require "support/active_record"
 require "user"
-require_relative '../../../undo/integration/shared_undo_integration_examples.rb'
+require 'undo/integration/shared_undo_integration_examples.rb'
 
 Undo.configure do |config|
   config.serializer = Undo::Serializer::ActiveModel.new
