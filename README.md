@@ -6,7 +6,9 @@ Undo
 [![Gem Version](https://badge.fury.io/rb/undo-serializer-active_model.png)](http://badge.fury.io/rb/undo-serializer-active_model)
 [![Code Climate](https://codeclimate.com/github/AlexParamonov/undo-serializer-active_model.png)](https://codeclimate.com/github/AlexParamonov/undo-serializer-active_model)
 
-ActiveModel serializer for Undo gem. Does not require anything from Rails so is friendly to use with POROs.
+ActiveModel serializer for [Undo gem](https://github.com/AlexParamonov/undo).
+
+Does not require anything from Rails so is friendly to use with POROs.
 
 Contents
 ---------
@@ -39,6 +41,7 @@ Most likely you'll install undo gem as well:
 Requirements
 ------------
 1. Ruby >= 1.9
+1. Undo gem
 
 Usage
 ------------
