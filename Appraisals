@@ -23,9 +23,9 @@ appraise "activerecord-head" do
   gem "undo-serializer-active_model", :path => "../"
 end
 
-appraise "undo-0.2" do
+appraise "undo-1.0.0" do
   gem "activerecord"
-  gem "undo", "~> 0.2.0"
+  gem "undo", "~> 1.0.0"
   gem "undo-serializer-active_model", :path => "../"
 end
 

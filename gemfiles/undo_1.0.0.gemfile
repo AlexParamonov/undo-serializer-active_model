@@ -4,7 +4,7 @@ source "https://rubygems.org"
 
 gem "rake"
 gem "activerecord"
-gem "undo", "~> 0.2.0"
+gem "undo", "~> 1.0.0"
 gem "undo-serializer-active_model", :path=>"../"
 
 group :development do
@@ -22,6 +22,7 @@ end
 
 group :test, :development do
   gem "rspec", ">= 3.0.0.beta1"
+  gem "activerecord", ">= 3.0.0"
   gem "activerecord-jdbcsqlite3-adapter", :platform=>:jruby
   gem "sqlite3", :platform=>[:ruby, :mswin, :mingw]
   gem "factory_girl"
