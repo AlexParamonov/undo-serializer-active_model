@@ -1,5 +1,5 @@
 require_relative "active_model/connector"
-require_relative "primitive"
+require "undo/serializer/primitive"
 
 module Undo
   module Serializer
