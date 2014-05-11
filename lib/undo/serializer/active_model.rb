@@ -62,9 +62,9 @@ module Undo
       end
 
       def deserialize_object(object_data)
-        object_meta  = get_option :meta, object_data
-        associations = get_option :associations, object_data
-        attributes   = get_option :attributes, object_data
+        object_meta  = connector.get_option :meta, object_data
+        associations = connector.get_option :associations, object_data
+        attributes   = connector.get_option :attributes, object_data
 
         with_transaction do
           connector.initialize_object(object_meta).tap do |object|
@@ -97,12 +97,6 @@ module Undo
 
       def array?(object)
         object.respond_to?(:map) && ! object.is_a?(Hash)
-      end
-
-      def get_option(name, options)
-        options.fetch name.to_sym do
-          options.fetch name.to_s
-        end
       end
 
     end

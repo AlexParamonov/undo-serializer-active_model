@@ -75,4 +75,17 @@ describe Undo::Serializer::ActiveModel do
       expect(restored_users).to eq users
     end
   end
+
+  describe "json store" do
+    it "restores object" do
+      hash = serializer.serialize user
+      hash = hash.to_json
+      user.delete
+      restored_user = serializer.deserialize JSON.load(hash)
+
+      expect(restored_user).to eq user
+      expect(user).not_to be_persisted
+      expect(restored_user).to be_persisted
+    end
+  end
 end

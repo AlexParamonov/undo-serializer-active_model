@@ -27,14 +27,14 @@ module Undo
         end
 
         def initialize_object(meta)
-          object_class = constantize meta.fetch(:class_name)
-          pk_attributes = meta.fetch :pk_attributes
+          object_class = constantize get_option :class_name, meta
+          pk_attributes = get_option :pk_attributes, meta
 
           object_initializer.call object_class, pk_attributes
         end
 
         def persist(object, object_meta)
-          persister.call object unless [false, nil, 0, "false"].include? object_meta[:persisted]
+          persister.call object unless [false, nil, 0, "false"].include? get_option :persisted, object_meta
         end
 
         def associate(object, association, associations)
@@ -48,6 +48,13 @@ module Undo
         def constantize(class_name)
           class_name.split('::').inject(Kernel) { |object, name| object = object.const_get(name); object }
         end
+
+        def get_option(name, options)
+          options.fetch name.to_sym do
+            options.fetch name.to_s
+          end
+        end
+
       end
     end
   end
