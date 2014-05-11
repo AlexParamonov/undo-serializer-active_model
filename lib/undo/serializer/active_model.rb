@@ -99,7 +99,6 @@ module Undo
         object.respond_to?(:map) && ! object.is_a?(Hash)
       end
 
-      private
       def get_option(name, options)
         options.fetch name.to_sym do
           options.fetch name.to_s
