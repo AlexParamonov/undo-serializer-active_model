@@ -62,9 +62,9 @@ module Undo
       end
 
       def deserialize_object(object_data)
-        object_meta  = object_data.fetch :meta
-        associations = object_data.fetch :associations
-        attributes   = object_data.fetch :attributes
+        object_meta  = get_option :meta, object_data
+        associations = get_option :associations, object_data
+        attributes   = get_option :attributes, object_data
 
         with_transaction do
           connector.initialize_object(object_meta).tap do |object|
